@@ -1,0 +1,235 @@
+---
+mass: # finite-volume mass budget in units of kg/s
+  lambda: "density"
+  thickness: "drC"
+  lhs:
+    var: null
+    sum:
+      var: null
+      Eulerian_tendency:
+        var: null
+        product:
+          var: null
+          thickness_tendency: "SSH_TEND_3D" # Thickness tendency precomputed from SSH snapshots
+          density: 1035.
+          area: "rA"
+  rhs:
+    var: null
+    sum:
+      var: null
+      advection:
+        var: null
+        sum:
+          var: null
+          lateral:
+            var: null
+            sum:
+              var: null
+              zonal_convergence:
+                var: null
+                product:
+                  var: null
+                  zonal_divergence:
+                    var: null
+                    difference:
+                      var: null
+                      zonal_mass_transport: "UMASSTRANS"
+                  sign: -1.
+              meridional_convergence:
+                var: null
+                product:
+                  var: null
+                  meridional_divergence:
+                    var: null
+                    difference:
+                      var: null
+                      meridional_mass_transport: "VMASSTRANS"
+                  sign: -1.
+          vertical:
+            var: null
+            sum:
+              var: null
+              vertical_convergence: "DELTA_WMASSTRANS" # Vertical divergence pre-computed (but could be implemented in xWMB)
+      surface_exchange_flux:
+        var: null
+        product:
+          var: null
+          thickness_tendency: "oceFWflx"
+          area: "rA"
+          
+heat: # finite-volume heat budget in units of J s-1
+  lambda: "THETA"
+  surface_lambda: "SST" 
+  lhs:
+    var: null
+    sum:
+      var: null
+      Eulerian_tendency:
+        var: null
+        product:
+          var: null
+          tracer_concentration_tendency: "TEMP_TEND" # Computed from temperature and SSH snapshots (need to account for z* stretching)
+          specific_heat_capacity: 3992.
+          density: 1035.
+          area: "rA"
+          thickness: "drC"
+      advection:
+        var: null
+        sum:
+          var: null
+          lateral:
+            var: null
+            sum:
+              var: null
+              horizontal_heat_convergence:
+                var: null
+                product:
+                  var: null
+                  specific_heat_capacity: 3992.
+                  density: 1035.
+                  horizontal_temp_convergence: "DELTA_ADVh_TH"
+          vertical:
+            var: null
+            sum:
+              var: null
+              vertical_heat_convergence:
+                var: null
+                product:
+                  var: null
+                  specific_heat_capacity: 3992.
+                  density: 1035.
+                  vertical_temp_convergence: "DELTA_ADVr_TH" 
+                  sign: -1.
+  rhs:
+    var: null
+    sum:
+      var: null
+      diffusion:
+        var: null
+        sum:
+          var: null
+          lateral:
+            var: null
+            sum:
+              var: null
+              horizontal_heat_convergence:
+                var: null
+                product:
+                  var: null
+                  specific_heat_capacity: 3992.
+                  density: 1035.
+                  horizontal_temp_convergence: "DELTA_DFhE_TH"
+                  sign: -1.
+          vertical:
+            var: null
+            sum:
+              var: null
+              vertical_heat_convergence:
+                var: null
+                product:
+                  var: null
+                  specific_heat_capacity: 3992.
+                  density: 1035.
+                  vertical_temp_convergence: "DELTA_DFrI_TH" 
+      surface_exchange_flux:
+        var: null
+        sum:
+          var: null
+          short_wave:
+            var: null
+            product:
+              var: null
+              area: "rA"
+              tracer_content_tendency_per_unit_area: "SBSFQSW" # 3D term, pre-computed from short-wave 2D diagnostic
+          non_short_wave:
+            var: null
+            product:
+              var: null
+              area: "rA"
+              tracer_content_tendency_per_unit_area: "TFLUXmSW" # Already 3D-broadcasted (zero below surface layer) 
+
+salt: # finite-volume salt budget in units of kg(salt)/s
+  lambda: "SALT"
+  surface_lambda: "SSS" 
+  lhs:
+    var: null
+    sum:
+      var: null
+      Eulerian_tendency:
+        var: null
+        product:
+          var: null
+          tracer_concentration_tendency: "SALIN_TEND" # Computed from salinity and SSH snapshots (need to account for z* stretching)
+          g_to_kg: 0.001 
+          density: 1035.
+          area: "rA"
+          thickness: "drC"
+      advection:
+        var: null
+        sum:
+          var: null
+          lateral:
+            var: null
+            sum:
+              var: null
+              horizontal_salt_convergence:
+                var: null
+                product:
+                  var: null
+                  g_to_kg: 0.001 
+                  density: 1035.
+                  horizontal_salinity_convergence: "DELTA_ADVh_SLT"
+          vertical:
+            var: null
+            sum:
+              var: null
+              vertical_salt_convergence:
+                var: null
+                product:
+                  var: null
+                  g_to_kg: 0.001 
+                  density: 1035.
+                  vertical_salinity_convergence: "DELTA_ADVr_SLT"
+                  sign: -1.
+  rhs:
+    var: null
+    sum:
+      var: null
+      diffusion:
+        var: null
+        sum:
+          var: null
+          lateral:
+            var: null
+            sum:
+              var: null
+              horizontal_salt_convergence:
+                var: null
+                product:
+                  var: null
+                  g_to_kg: 0.001
+                  density: 1035.
+                  horizontal_salinity_convergence: "DELTA_DFhE_SLT"
+                  sign: -1.
+          vertical:
+            var: null
+            sum:
+              var: null
+              vertical_salt_convergence:
+                var: null
+                product:
+                  var: null
+                  g_to_kg: 0.001
+                  density: 1035.
+                  vertical_salinity_convergence: "DELTA_DFrI_SLT"
+      surface_exchange_flux:
+        var: null
+        sum:
+          var:
+          salt_flux:
+            var:
+            product:
+              var: null
+              area: "rA"
+              g_to_kg: 0.001
+              surface_salt_flux: "SFLUX" # Already 3D-broadcasted (zero below surface layer)
